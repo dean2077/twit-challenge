@@ -1,0 +1,10 @@
+# testing files
+debug.log
+output*.html
+pccasegear.html
+
+# python virtual env
+/venv
+
+# 
+/.idea
