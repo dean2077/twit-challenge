@@ -16,13 +16,17 @@ import time
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
+from selenium.common.exceptions import NoSuchElementException
 
 logger = logging.getLogger(__name__)
 
 
-def css_method(username):
-
-    search = ".r-1ljd8xs > div:nth-child(1) > div:nth-child(2) > div:nth-child(1) > div:nth-child(1) > div:nth-child(3) > section:nth-child(1) > div:nth-child(2) > div:nth-child(1) > div:nth-child(1) > div:nth-child(1) > div:nth-child(1) > article:nth-child(1) > div:nth-child(1) > div:nth-child(1) > div:nth-child(1) > div:nth-child(2) > div:nth-child(2) > div:nth-child(2) > div:nth-child(1) > div:nth-child(1) > span:nth-child(1)"
+def css_method(username, check):
+    """
+    Using selenium to get tweets
+    param username: username of the person to return tweets from
+    param check: boolean, if true will check for new tweets every 10 minutes
+    """
 
     options = webdriver.ChromeOptions()
     options.headless = True
@@ -31,39 +35,52 @@ def css_method(username):
     driver.get(api_url)
     time.sleep(5)
 
-    # Get first tweet, currently working
-    # search = "div:nth-child(1) > div > div > article > div > div > div > div.css-1dbjc4n.r-18u37iz > " \
-    #          "div.css-1dbjc4n.r-1iusvr4.r-16y2uox.r-1777fci.r-1mi0q7o > div:nth-child(2) > div:nth-child(1)"
-    # tweet = driver.find_element(By.CSS_SELECTOR, search)
-    # print(f'---------------------first tweet is:---------------------\n'
-    #       f' {tweet.text}'
-    #       f'\n---------------------end first tweet---------------------')
+    search = "div:nth-child({}) > div > div > article > div > div > div > div.css-1dbjc4n.r-18u37iz > " \
+             "div.css-1dbjc4n.r-1iusvr4.r-16y2uox.r-1777fci.r-1mi0q7o > div:nth-child(2) > div:nth-child(1)"
 
     tweets = []
-    for i in range(1, 6):
+    i = 0
+    tweet_count = 0
+    while True:
+        i += 1
+        if tweet_count is 5 or i is 10:
+            # found the number of tweets we want
+            # or i has gone too high
+            break
         # Get first tweet, currently working
-        search = f"div:nth-child({i}) > div > div > article > div > div > div > div.css-1dbjc4n.r-18u37iz > " \
-                 "div.css-1dbjc4n.r-1iusvr4.r-16y2uox.r-1777fci.r-1mi0q7o > div:nth-child(2) > div:nth-child(1)"
-        tweet = driver.find_element(By.CSS_SELECTOR, search)
-        print(f'---------------------tweet number: {i} is: --------------------\n'
-              f' {tweet.text}\n'
-              f'---------------------end tweet number {i} ---------------------\n')
 
-    #     search = f"div.css-1dbjc4n.r-1iusvr4.r-16y2uox.r-1777fci.r-1mi0q7o > div:nth-child(2) > div:nth-child(1)"
-    #     tweet = driver.find_element(By.CSS_SELECTOR, search)
-    #     print(f'{i} tweet is: {tweet.text}')
-    #     tweets.append(tweet)
+        try:
+            tweet = driver.find_element(By.CSS_SELECTOR, search.format(i))
+            print(f'---------------------tweet number: {i} is: --------------------\n'
+                  f' {tweet.text}\n'
+                  f'---------------------end tweet number {i} ---------------------\n')
+        except NoSuchElementException:
+            # couldn't find the tweet, decrement i and continue
+            print(f"couldn't find tweet number {i}")
+            continue
+        tweets.append(tweet.text)
+        tweet_count += 1
+
+    if check:
+        while True:
+            # Sleep for 10 mintues and then check for a new tweet
+            print('Waiting for 10minutes and then checking for a new tweet\n')
+            print('Press crtl+c to cancel')
+            time.sleep(600)
+            tweet = driver.find_element(By.CSS_SELECTOR, search.format(1))
+            if tweet.text not in tweets:
+                print(f'--------------------- new tweet -------------------------\n'
+                      f' {tweet.text}\n'
+                      f'--------------------- end new tweet ---------------------\n')
+                tweets.append(tweet.text)
 
     driver.close()
-    print('done css method')
+    print(f'Finished css_method, found a total of {len(tweets)} tweets')
 
 
 def main(args):
     """ Main entry point of the app """
-    logging.info("hello world")
-    logging.info(args)
-
-    css_method(args.username)
+    css_method(args.username, args.check)
 
 
 if __name__ == "__main__":
@@ -71,7 +88,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     # Optional argument which requires a parameter (eg. -d test)
-    parser.add_argument("-U", "--username", action="store", dest="username")
+    parser.add_argument("-U", "--username", action="store", dest="username", help="Username to search tweets for")
+    parser.add_argument("-C", "--check", action='store_true', dest="check", help="Check every 10mins for a new tweet")
 
     args = parser.parse_args()
     main(args)
