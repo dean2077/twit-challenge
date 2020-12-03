@@ -8,7 +8,7 @@ Write a Python program that monitors a Twitter account.
     Make sure to use scraping or APIs that do not require user authentication or a Twitter developer account.
     Must not use open source libraries such as Twint, Tweepy to do the heavy lifting
 """
-
+import os
 import argparse
 import logging
 import time
@@ -30,7 +30,11 @@ def css_method(username, check):
 
     options = webdriver.ChromeOptions()
     options.headless = True
-    driver = webdriver.Chrome(r'C:\Users\User\Downloads\chromedriver_win32\chromedriver.exe', options=options)
+    chrome_driver_path = os.getenv(
+        'ChromeDriver',
+        default=r'C:\Users\User\Downloads\chromedriver_win32\chromedriver.exe'
+    )
+    driver = webdriver.Chrome(chrome_driver_path, options=options)
     api_url = "https://twitter.com/" + username
     driver.get(api_url)
     time.sleep(5)
@@ -75,21 +79,33 @@ def css_method(username, check):
                 tweets.append(tweet.text)
 
     driver.close()
-    print(f'Finished css_method, found a total of {len(tweets)} tweets')
+    print(f'Finished css_method, found a total of {len(tweets)} tweet(s)')
 
 
-def main(args):
+def main():
     """ Main entry point of the app """
+    parser = argparse.ArgumentParser()
+
+    # Optional argument which requires a parameter (eg. -d test)
+    parser.add_argument(
+        "-U", "--username",
+        action="store",
+        dest="username",
+        help="Username to search tweets for",
+        required=True
+    )
+    parser.add_argument(
+        "-C", "--check",
+        action='store_true',
+        dest="check",
+        help="Check every 10mins for a new tweet"
+    )
+
+    args = parser.parse_args()
+
     css_method(args.username, args.check)
 
 
 if __name__ == "__main__":
     """ This is executed when run from the command line """
-    parser = argparse.ArgumentParser()
-
-    # Optional argument which requires a parameter (eg. -d test)
-    parser.add_argument("-U", "--username", action="store", dest="username", help="Username to search tweets for")
-    parser.add_argument("-C", "--check", action='store_true', dest="check", help="Check every 10mins for a new tweet")
-
-    args = parser.parse_args()
-    main(args)
+    main()
