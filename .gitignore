@@ -8,3 +8,6 @@ pccasegear.html
 
 # 
 /.idea
+
+# ignore generate tweets.json files
+*tweets.json

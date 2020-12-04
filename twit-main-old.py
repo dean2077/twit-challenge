@@ -14,8 +14,6 @@ import logging
 from bs4 import BeautifulSoup
 import requests
 from requests_html import HTMLSession
-import time
-from selenium import webdriver
 
 logger = logging.getLogger(__name__)
 
