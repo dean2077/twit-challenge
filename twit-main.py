@@ -17,7 +17,6 @@ import argparse
 import logging
 import time
 import json
-from datetime import datetime
 
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
@@ -142,6 +141,8 @@ def css_method(username, check, curl):
             if tweet.text not in tweets:
                 if curl:
                     tweet_obj.add_tweet(timestamp.text, tweet.text)
+                    # Dump to file before sleeping again
+                    tweet_obj.dump_to_file(tweet_obj.output_path)
                 print(f'--------------------- new tweet -------------------------\n'
                       f' {tweet.text}\n'
                       f'--------------------- end new tweet ---------------------\n')

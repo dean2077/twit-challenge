@@ -10,7 +10,6 @@ Write a Python program that monitors a Twitter account.
  - Make sure to use scraping or APIs that do not require user authentication or a Twitter developer account.
  - Must not use open source libraries such as Twint, Tweepy to do the heavy lifting
 
-
 ## Requirements
 
 - This project was built and tested with Python3.6
@@ -26,3 +25,5 @@ Write a Python program that monitors a Twitter account.
   - find tweets for user textfiles
 - `python twit-main.py --username textfiles --check`
   - find tweets for user textfiles and keep checking every 10 mins for new tweets
+- `python twit-main.py --username textfiles --curl`
+  - the curl option adds the ability to write the tweets out to a json file in the name format of `<username>-tweets.json`
