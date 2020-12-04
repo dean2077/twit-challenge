@@ -23,6 +23,7 @@ from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
+from selenium.webdriver.common.action_chains import ActionChains
 
 logger = logging.getLogger(__name__)
 
@@ -87,10 +88,11 @@ def css_method(username, check, curl):
     driver = webdriver.Chrome(chrome_driver_path, options=options)
     api_url = "https://twitter.com/" + username
     driver.get(api_url)
+    actions = ActionChains(driver)
     time.sleep(5)
 
     tweet_search = "div:nth-child({}) > div > div > article > div > div > div > div.css-1dbjc4n.r-18u37iz > " \
-                   "div.css-1dbjc4n.r-1iusvr4.r-16y2uox.r-1777fci.r-1mi0q7o > div:nth-child(2) > div:nth-child(1)"
+                   "div.css-1dbjc4n.r-1iusvr4.r-16y2uox.r-1777fci.r-1mi0q7o > div:nth-child(2) > div:nth-child(1) > div"
     time_search = "div:nth-child({}) > div > div > article > div > div > div > div.css-1dbjc4n.r-18u37iz > " \
                   "div.css-1dbjc4n.r-1iusvr4.r-16y2uox.r-1777fci.r-1mi0q7o > div:nth-child(1) > div > div > " \
                   "div.css-1dbjc4n.r-1d09ksm.r-18u37iz.r-1wbh5a2 > a > time"
@@ -102,9 +104,8 @@ def css_method(username, check, curl):
     tweet_obj = Tweet(username=username, tweet_url=api_url)
     while True:
         i += 1
-        if tweet_count is 5 or i is 10:
-            # found the number of tweets we want
-            # or i has gone too high
+        if i is 10:
+            # Give up after 10 tries to get 5 tweets
             break
         try:
             tweet = driver.find_element(By.CSS_SELECTOR, tweet_search.format(i))
@@ -113,15 +114,22 @@ def css_method(username, check, curl):
             if curl:
                 tweet_obj.add_tweet(timestamp.text, tweet.text)
             # print to stdout no matter what
-            print(f'---------------------tweet number: {i} is: --------------------\n'
+            print(f'--------------------- tweet number: {i} is: --------------------\n'
                   f' {tweet.text}\n'
-                  f'---------------------end tweet number {i} ---------------------\n')
+                  f'--------------------- end tweet number {i} ---------------------\n')
         except NoSuchElementException:
-            # couldn't find the tweet, decrement i and continue
-            print(f"couldn't find tweet number {i}")
+            # couldn't find the tweet, continue
+            # I believe this is an issue with the page not being scrolled down enough
+            print(f"couldn't find tweet number {i}, may have been deleted")
             continue
         tweets.append(tweet.text)
         tweet_count += 1
+        # Found the number of tweets we were after
+        if tweet_count is 5:
+            break
+        time.sleep(2)
+        # Force the page to move down to the current tweet
+        actions.move_to_element(tweet).perform()
 
     if check:
         while True:
