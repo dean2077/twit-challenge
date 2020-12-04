@@ -28,23 +28,13 @@ logger = logging.getLogger(__name__)
 
 
 class Tweet:
-    def __init__(
-            self,
-            username,
-            tweet_url
-            # timestamp
-            # text
-    ):
-        # user name & id
-        self.username = username
+    def __init__(self, username, tweet_url):
         # tweet basic data
+        self.username = username
         self.tweet_url = tweet_url
-        # self.timestamp = timestamp
-        # tweet text
-        # self.text = text
         # create a file of tweets per user
         self.output_path = os.path.abspath(os.path.join(os.getcwd(), username + '-tweets.json'))
-        # self.dump_to_file(self.output_path)
+        # create a dictionary of tweets based on the username
         self.tweet_dict = {
             "tweet_username": username,
             "tweet_url": tweet_url,
@@ -57,21 +47,21 @@ class Tweet:
         }
 
     def dump_to_file(self, output_path):
-        # check if file already exists
-        # if so append data to it
-        # else
-        # write data to new file
+        """
+        Write tweet data to an json output file
+        """
         if os.path.exists(os.path.abspath(output_path)):
-            append_or_write = 'a'
-        else:
-            append_or_write = 'w'
-
-        # need to format output according json style
+            # if file already exists we only want to add the new tweets
+            # thus we need to load in current data and check
+            with open(output_path) as input_file:
+                data = json.load(input_file)
+            for tweet in data['tweets']:
+                if tweet not in self.tweet_dict['tweets']:
+                    # add the new tweet to tweet_dict
+                    self.add_tweet(tweet['timestamp'], tweet['text'])
 
         # Write the output
-        with open(self.output_path, append_or_write) as output_file:
-            # output = f'{self.timestamp}: username: {self.username}, tweet_text: \n\t {self.text}'
-            # output_file.write(output)
+        with open(output_path, 'w') as output_file:
             json.dump(self.tweet_dict, output_file, indent=4)
 
     def add_tweet(self, timestamp, tweet_text):
@@ -179,9 +169,7 @@ def main():
         dest="curl",
         help="use this command to dump tweets to an output file"
     )
-
     args = parser.parse_args()
-
     css_method(args.username, args.check, args.curl)
 
 
