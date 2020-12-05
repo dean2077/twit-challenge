@@ -61,6 +61,7 @@ class Tweet:
                     self.add_tweet(tweet['timestamp'], tweet['text'])
 
         # Write the output
+        print(f'dumping tweets to file: {output_path}')
         with open(output_path, 'w') as output_file:
             json.dump(self.tweet_dict, output_file, indent=4)
 
@@ -80,11 +81,17 @@ def css_method(username, check, curl):
 
     options = webdriver.ChromeOptions()
     options.headless = True
-    chrome_driver_path = os.getenv(
-        'ChromeDriver',
-        default=r'C:\Users\User\Downloads\chromedriver_win32\chromedriver.exe'
-    )
-    driver = webdriver.Chrome(chrome_driver_path, options=options)
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-setuid-sandbox")
+    options.add_argument("--disable-extensions")
+    if 'nt' in os.name:
+        chrome_driver_path = os.getenv(
+            'ChromeDriver',
+            default=r'C:\Users\User\Downloads\chromedriver_win32\chromedriver.exe'
+        )
+        driver = webdriver.Chrome(chrome_driver_path,options=options)
+    else:
+        driver = webdriver.Chrome(options=options)
     api_url = "https://twitter.com/" + username
     driver.get(api_url)
     actions = ActionChains(driver)
@@ -125,6 +132,8 @@ def css_method(username, check, curl):
         tweet_count += 1
         # Found the number of tweets we were after
         if tweet_count is 5:
+            if curl:
+                tweet_obj.dump_to_file(tweet_obj.output_path)
             break
         time.sleep(2)
         # Force the page to move down to the current tweet
